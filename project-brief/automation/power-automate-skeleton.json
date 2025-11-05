@@ -1,0 +1,13 @@
+{
+  "name": "NewHire_Onboarding_Flow",
+  "trigger": "When item is created in SharePoint 'New-Hire Requests'",
+  "steps": [
+    "Validate required fields",
+    "Call Azure Function /provision with payload",
+    "Create Teams site from template",
+    "Post welcome message to Teams",
+    "Create tasks for manager checklist",
+    "Write run log with correlationId",
+    "Notify owner on success/failure"
+  ]
+}

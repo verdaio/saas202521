@@ -1,0 +1,12 @@
+{
+  "Name": "AutomationKeyVaultPolicy",
+  "AccessPolicies": [
+    {
+      "Principal": "automation-managed-identity",
+      "Permissions": [
+        "get",
+        "list"
+      ]
+    }
+  ]
+}

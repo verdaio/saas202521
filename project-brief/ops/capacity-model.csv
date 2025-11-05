@@ -1,0 +1,4 @@
+Role,Max Concurrent FTDs,Max Retainers,Assumptions
+Solo Operator,3,5,FTD 2 days; Retainer 10–16 hrs/mo
+Operator + Jr Automator,6,10,Parallel builds + QA
+Operator + Automator + PM,8,15,PM handles intake/reporting

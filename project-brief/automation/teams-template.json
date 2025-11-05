@@ -1,0 +1,20 @@
+{
+  "teamTemplate": "Onboarding Team",
+  "channels": [
+    {
+      "name": "Welcome",
+      "tabs": [
+        "Wiki"
+      ]
+    },
+    {
+      "name": "HR"
+    },
+    {
+      "name": "IT-Setup"
+    },
+    {
+      "name": "Manager-Checklist"
+    }
+  ]
+}

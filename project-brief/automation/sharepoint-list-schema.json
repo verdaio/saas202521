@@ -1,0 +1,43 @@
+{
+  "ListName": "New-Hire Requests",
+  "Fields": [
+    {
+      "name": "FirstName",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "name": "LastName",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "name": "PersonalEmail",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "name": "ManagerUPN",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "name": "Role",
+      "type": "Choice",
+      "choices": [
+        "Employee",
+        "Contractor",
+        "Intern"
+      ]
+    },
+    {
+      "name": "Department",
+      "type": "Text"
+    },
+    {
+      "name": "StartDate",
+      "type": "DateTime",
+      "required": true
+    }
+  ]
+}
