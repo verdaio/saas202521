@@ -23,43 +23,80 @@ New-Item -ItemType Directory -Path $tempDir | Out-Null
 # Copy artifacts
 Write-Host "Copying artifacts..." -ForegroundColor Yellow
 
+$missingComponents = @()
+
 # Azure Functions
-Write-Host "  - Azure Functions app"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\apps\azfunc-provision") `
-  -Destination (Join-Path $tempDir "azfunc-provision") `
-  -Recurse `
-  -Exclude @("node_modules", "dist", ".env", "local.settings.json")
+$azFuncPath = Join-Path $PSScriptRoot "..\apps\azfunc-provision"
+if (Test-Path $azFuncPath) {
+    Write-Host "  - Azure Functions app" -ForegroundColor Green
+    Copy-Item -Path $azFuncPath `
+      -Destination (Join-Path $tempDir "azfunc-provision") `
+      -Recurse `
+      -Exclude @("node_modules", "dist", ".env", "local.settings.json")
+} else {
+    Write-Host "  - Azure Functions app [MISSING]" -ForegroundColor Red
+    $missingComponents += "Azure Functions (apps/azfunc-provision)"
+}
 
 # SharePoint scripts
-Write-Host "  - SharePoint provisioning"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\infra\sharepoint") `
-  -Destination (Join-Path $tempDir "sharepoint") `
-  -Recurse
+$spPath = Join-Path $PSScriptRoot "..\infra\sharepoint"
+if (Test-Path $spPath) {
+    Write-Host "  - SharePoint provisioning" -ForegroundColor Green
+    Copy-Item -Path $spPath `
+      -Destination (Join-Path $tempDir "sharepoint") `
+      -Recurse
+} else {
+    Write-Host "  - SharePoint provisioning [MISSING]" -ForegroundColor Red
+    $missingComponents += "SharePoint scripts (infra/sharepoint)"
+}
 
 # Teams scripts
-Write-Host "  - Teams template"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\infra\teams") `
-  -Destination (Join-Path $tempDir "teams") `
-  -Recurse
+$teamsPath = Join-Path $PSScriptRoot "..\infra\teams"
+if (Test-Path $teamsPath) {
+    Write-Host "  - Teams template" -ForegroundColor Green
+    Copy-Item -Path $teamsPath `
+      -Destination (Join-Path $tempDir "teams") `
+      -Recurse
+} else {
+    Write-Host "  - Teams template [MISSING]" -ForegroundColor Red
+    $missingComponents += "Teams scripts (infra/teams)"
+}
 
 # Power Automate flow
-Write-Host "  - Power Automate flow"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\flows\newhire") `
-  -Destination (Join-Path $tempDir "flow") `
-  -Recurse
+$flowPath = Join-Path $PSScriptRoot "..\flows\newhire"
+if (Test-Path $flowPath) {
+    Write-Host "  - Power Automate flow" -ForegroundColor Green
+    Copy-Item -Path $flowPath `
+      -Destination (Join-Path $tempDir "flow") `
+      -Recurse
+} else {
+    Write-Host "  - Power Automate flow [MISSING]" -ForegroundColor Red
+    $missingComponents += "Power Automate flow (flows/newhire)"
+}
 
 # Documentation
-Write-Host "  - Documentation"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\docs\RUNBOOK.md") `
-  -Destination (Join-Path $tempDir "RUNBOOK.md")
-Copy-Item -Path (Join-Path $PSScriptRoot "..\docs\ROLLBACK.md") `
-  -Destination (Join-Path $tempDir "ROLLBACK.md")
+$runbookPath = Join-Path $PSScriptRoot "..\docs\RUNBOOK.md"
+$rollbackPath = Join-Path $PSScriptRoot "..\docs\ROLLBACK.md"
+if ((Test-Path $runbookPath) -and (Test-Path $rollbackPath)) {
+    Write-Host "  - Documentation" -ForegroundColor Green
+    Copy-Item -Path $runbookPath -Destination (Join-Path $tempDir "RUNBOOK.md")
+    Copy-Item -Path $rollbackPath -Destination (Join-Path $tempDir "ROLLBACK.md")
+} else {
+    Write-Host "  - Documentation [MISSING]" -ForegroundColor Red
+    $missingComponents += "Documentation (docs/RUNBOOK.md, docs/ROLLBACK.md)"
+}
 
 # Templates
-Write-Host "  - Templates"
-Copy-Item -Path (Join-Path $PSScriptRoot "..\project-brief\automation") `
-  -Destination (Join-Path $tempDir "templates") `
-  -Recurse
+$templatesPath = Join-Path $PSScriptRoot "..\project-brief\automation"
+if (Test-Path $templatesPath) {
+    Write-Host "  - Templates" -ForegroundColor Green
+    Copy-Item -Path $templatesPath `
+      -Destination (Join-Path $tempDir "templates") `
+      -Recurse
+} else {
+    Write-Host "  - Templates [MISSING]" -ForegroundColor Yellow
+    Write-Host "    (Templates are optional for core functionality)" -ForegroundColor Yellow
+}
 
 # Create README
 Write-Host "  - README"
@@ -111,7 +148,35 @@ Refer to RUNBOOK.md for troubleshooting and support contacts.
 
 $readmeContent | Out-File (Join-Path $tempDir "README.md") -Encoding UTF8
 
+# Check if critical components are missing
+if ($missingComponents.Count -gt 0) {
+    Write-Host ""
+    Write-Host "⚠️  WARNING: Missing components detected!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "The following components are required but not found:" -ForegroundColor Yellow
+    foreach ($component in $missingComponents) {
+        Write-Host "  - $component" -ForegroundColor Yellow
+    }
+    Write-Host ""
+    Write-Host "To resolve this issue:" -ForegroundColor Cyan
+    Write-Host "  1. Ensure all PRs (1-7) are merged into this branch" -ForegroundColor Cyan
+    Write-Host "  2. Or run this script from a branch with all components" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Note: The FTD pack can still be created with available components," -ForegroundColor Yellow
+    Write-Host "      but it will be incomplete and may not work properly." -ForegroundColor Yellow
+    Write-Host ""
+
+    # Ask user if they want to continue
+    $continue = Read-Host "Continue creating partial pack? (y/N)"
+    if ($continue -ne "y" -and $continue -ne "Y") {
+        Write-Host "❌ Packaging cancelled." -ForegroundColor Red
+        Remove-Item $distDir -Recurse -Force
+        exit 1
+    }
+}
+
 # Create ZIP
+Write-Host ""
 Write-Host "Creating archive..." -ForegroundColor Yellow
 $zipPath = Join-Path $distDir "ftd-pack.zip"
 Compress-Archive -Path (Join-Path $tempDir "*") -DestinationPath $zipPath -Force
