@@ -20,7 +20,10 @@ function loadGroupMappings(): GroupMappings {
     return groupMappingsCache;
   }
 
-  const configPath = path.join(__dirname, "../../config/group-mappings.json");
+  // After TS compilation: __dirname = dist/src/lib, need to go up to project root
+  // In dev: src/lib -> ../../config
+  // In prod: dist/src/lib -> ../../../config
+  const configPath = path.join(__dirname, "../../../config/group-mappings.json");
   const configData = fs.readFileSync(configPath, "utf-8");
   groupMappingsCache = JSON.parse(configData);
   return groupMappingsCache!;
@@ -46,6 +49,7 @@ export async function createUser(
     surname: lastName,
     jobTitle: jobTitle,
     department: department,
+    usageLocation: process.env.FTD_USAGE_LOCATION || "US", // Required for license assignment
     passwordProfile: {
       forceChangePasswordNextSignIn: true,
       password: generateTemporaryPassword()
